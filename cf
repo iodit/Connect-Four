@@ -1,0 +1,589 @@
+package connectfour
+
+fun main() {
+    var count = 0
+    var tak = listOf<String>()
+    var p = ""
+    var d = ""
+    var rad: Int
+    var sl: Int
+    println("Connect Four")
+    println("First player's name:")
+    val nameOne: String = readln()
+    println("Second player's name:")
+    val nameTwo: String = readln()
+    println("Set the board dimensions (Rows x Columns)")
+    println("Press Enter for default (6 x 7)")
+    var dim = readln()
+
+    while (!isValid(dim)) {
+        println("Invalid input")
+        println("Set the board dimensions (Rows x Columns)")
+        println("Press Enter for default (6 x 7)")
+        dim = readln()
+    }
+
+    if (dim.isEmpty()) ++count else tak = dim.split("x", ignoreCase = true)
+
+    if (count > 0) {
+        rad = 6
+        sl = 7
+    } else {
+        for (i in tak[0]) if (i.isDigit()) { p += i.toString() }
+        for (y in tak[1]) if (y.isDigit()) { d += y.toString() }
+        rad = p.toInt()
+        sl = d.toInt()
+        /* rad = tak[0].trim().toInt()
+        sl = tak[1].trim().toInt() */
+        if (rad !in 5..9 || sl !in 5..9) {
+            if (rad < 5 || rad > 9) println("Board rows should be from 5 to 9")
+            if (sl < 5 || sl > 9) println("Board columns should be from 5 to 9")
+            println("Set the board dimensions (Rows x Columns)")
+            println("Press Enter for default (6 x 7)")
+            while (count == 0 && ((rad < 5 || rad > 9) || (sl < 5 || sl > 9))) {
+                p = ""
+                d = ""
+                dim = readln()
+                while (!isValid(dim)) {
+                    println("Invalid input")
+                    println("Set the board dimensions (Rows x Columns)")
+                    println("Press Enter for default (6 x 7)")
+                    dim = readln()
+                }
+                if (dim.isEmpty()) ++count else tak = dim.trim().split("x", ignoreCase = true)
+                if (count > 0) {
+                    rad = 6
+                    sl = 7
+                } else {
+                    /*rad = tak[0].trim().toInt()
+                    sl = tak[1].trim().toInt()*/
+                    for (i in tak[0]) if (i.isDigit()) { p += i.toString() }
+                    for (y in tak[1]) if (y.isDigit()) { d += y.toString() }
+                    rad = p.toInt()
+                    sl = d.toInt()
+                    if ((rad < 5 || rad > 9) || (sl < 5 || sl > 9)) {
+                        if (rad < 5 || rad > 9) println("Board rows should be from 5 to 9")
+                        if (sl < 5 || sl > 9) println("Board columns should be from 5 to 9")
+                        println("Set the board dimensions (Rows x Columns)")
+                        println("Press Enter for default (6 x 7)")
+                    }
+                }
+            }
+        }
+    }
+    println("Do you want to play single or multiple games?")
+    println("For a single game, input 1 or press Enter")
+    println("Input a number of games:")
+    var nofGames = readln()
+    if (nofGames.isEmpty() || nofGames == "1") {
+        nofGames = "1"
+    } else {
+        while (!isnumOnePlus(nofGames) && !nofGames.isEmpty() && nofGames != "1") {
+            println("Invalid input")
+            println("Do you want to play single or multiple games?")
+            println("For a single game, input 1 or press Enter")
+            println("Input a number of games:")
+            nofGames = readln()
+            if (nofGames.isEmpty()) nofGames = "1"
+        }
+    }
+    val tm = nofGames.toInt()
+    if (tm == 1) {
+        val a: MutableList<MutableList<String>> = MutableList(rad + 1) { MutableList(sl * 2 + 1) { "" } }
+        for (i in 0..rad) {
+            for (y in 0..sl * 2) {
+                if (i < rad) {
+                    if (y == 0 || y % 2 == 0) a[i][y] += "║" else a[i][y] += " "
+                } else {
+                    if (y == 0) a[i][y] += "╚"
+                    if (y == sl * 2) a[i][y] += "╝"
+                    if (y % 2 != 0 && y < sl * 2 - 1) a[i][y] += "╩"
+                    if (y % 2 == 0 && y < sl * 2) a[i][y] += "═"
+                }
+            }
+        }
+        dopolSk(rad, sl, nameOne, nameTwo)
+        var ht = ""
+        var valida = 0
+        var hvezdy = 0
+        var kolca = 0
+        val b = MutableList(sl) { 0 }
+        while (ht != "end" && !forI(a, rad, sl) && !isF(a)) {
+            println("$nameOne's turn:")
+            ht = readln()
+
+            while (valida == 0) {
+                if (ht != "end") {
+                    if (!isNum(ht) && ht != "end") {
+                        println("Incorrect column number")
+                        println("$nameOne's turn:")
+                        ht = readln()
+                    } else if (ht.toInt() !in 1..sl && ht != "end") {
+                        println("The column number is out of range (1 - $sl)")
+                        println("$nameOne's turn:")
+                        ht = readln()
+                    } else if (ht != "end" && isFull(ht.toInt(), rad, b)) {
+                        println("Column $ht is full")
+                        println("$nameOne's turn:")
+                        ht = readln()
+                    } else valida = 1
+                } else valida = 1
+            }
+            if (ht == "end") {
+                break
+            } else {
+                hvezdy = ht.toInt()
+                for (t in rad - 1 downTo 0) {
+                    if (a[t][hvezdy * 2 - 1] == " ") {
+                        a[t][hvezdy * 2 - 1] = a[t][hvezdy * 2 - 1].replace(" ", "o")
+                        break
+                    }
+                }
+                sPolem(rad, sl, a)
+                b[hvezdy - 1] = b[hvezdy - 1] + 1
+                if (forI(a, rad, sl)) {
+                    println("Player $nameOne won")
+                    break
+                } else if (isF(a)) {
+                    println("It is a draw")
+                    break
+                } else {
+                    println("$nameTwo's turn:")
+                    ht = readln()
+                    valida = 0
+                    while (valida == 0) {
+                        if (ht != "end") {
+                            if (!isNum(ht) && ht != "end") {
+                                println("Incorrect column number")
+                                println("$nameTwo's turn:")
+                                ht = readln()
+                            } else if (ht.toInt() !in 1..sl && ht != "end") {
+                                println("The column number is out of range (1 - $sl)")
+                                println("$nameTwo's turn:")
+                                ht = readln()
+                            } else if (ht != "end" && isFull(ht.toInt(), rad, b)) {
+                                println("Column $ht is full")
+                                println("$nameTwo's turn:")
+                                ht = readln()
+                            } else valida = 1
+                        } else valida = 1
+                    }
+                    if (ht == "end") {
+                        break
+                    } else {
+                        kolca = ht.toInt()
+                        for (t in rad - 1 downTo 0) {
+                            if (a[t][kolca * 2 - 1] == " ") {
+                                a[t][kolca * 2 - 1] = a[t][kolca * 2 - 1].replace(" ", "*")
+                                break
+                            }
+                        }
+                        sPolem(rad, sl, a)
+                        b[kolca - 1] += 1
+                        if (forI(a, rad, sl)) {
+                            println("Player $nameTwo won")
+                            valida = 1
+                            break
+                        } else if (isF(a)) {
+                            println("It is a draw")
+                            valida = 1
+                            break
+                        } else valida = 0
+                    }
+                }
+            }
+            //if (ht != "end") ht = "" else ht = "end"
+        }
+    } else {
+        var namO = 0
+        var namT = 0
+        dopolSk(rad, sl, nameOne, nameTwo, tm)
+        for (q in 1..tm) {
+            val a: MutableList<MutableList<String>> = MutableList(rad + 1) { MutableList(sl * 2 + 1) { "" } }
+            for (i in 0..rad) {
+                for (y in 0..sl * 2) {
+                    if (i < rad) {
+                        if (y == 0 || y % 2 == 0) a[i][y] += "║" else a[i][y] += " "
+                    } else {
+                        if (y == 0) a[i][y] += "╚"
+                        if (y == sl * 2) a[i][y] += "╝"
+                        if (y % 2 != 0 && y < sl * 2 - 1) a[i][y] += "╩"
+                        if (y % 2 == 0 && y < sl * 2) a[i][y] += "═"
+                    }
+                }
+            }
+            if (q > 1) spoluM(rad, sl, a, q)
+            var ht = ""
+            var valida = 0
+            var hvezdy = 0
+            var kolca = 0
+            var b = MutableList(sl) { 0 }
+            if (q % 2 != 0) {
+                while (ht != "end" && !forI(a, rad, sl) && !isF(a)) {
+                    println("$nameOne's turn:")
+                    ht = readln()
+
+                    while (valida == 0) {
+                        if (ht != "end") {
+                            if (!isNum(ht) && ht != "end") {
+                                println("Incorrect column number")
+                                println("$nameOne's turn:")
+                                ht = readln()
+                            } else if (ht.toInt() !in 1..sl && ht != "end") {
+                                println("The column number is out of range (1 - $sl)")
+                                println("$nameOne's turn:")
+                                ht = readln()
+                            } else if (ht != "end" && isFull(ht.toInt(), rad, b)) {
+                                println("Column $ht is full")
+                                println("$nameOne's turn:")
+                                ht = readln()
+                            } else valida = 1
+                        } else valida = 1
+                    }
+                    if (ht == "end") {
+                        break
+                    } else {
+                        hvezdy = ht.toInt()
+                        for (t in rad - 1 downTo 0) {
+                            if (a[t][hvezdy * 2 - 1] == " ") {
+                                a[t][hvezdy * 2 - 1] = a[t][hvezdy * 2 - 1].replace(" ", "o")
+                                break
+                            }
+                        }
+                        sPolem(rad, sl, a)
+                        b[hvezdy - 1] = b[hvezdy - 1] + 1
+                        if (forI(a, rad, sl)) {
+                            println("Player $nameOne won")
+                            namO += 2
+                            println("Score\n$nameOne: $namO $nameTwo: $namT")
+                        } else if (isF(a)) {
+                            println("It is a draw")
+                            namT++
+                            namO++
+                            println("Score\n$nameOne: $namO $nameTwo: $namT")
+                        } else {
+                            println("$nameTwo's turn:")
+                            ht = readln()
+                            valida = 0
+                            while (valida == 0) {
+                                if (ht != "end") {
+                                    if (!isNum(ht) && ht != "end") {
+                                        println("Incorrect column number")
+                                        println("$nameTwo's turn:")
+                                        ht = readln()
+                                    } else if (ht.toInt() !in 1..sl && ht != "end") {
+                                        println("The column number is out of range (1 - $sl)")
+                                        println("$nameTwo's turn:")
+                                        ht = readln()
+                                    } else if (ht != "end" && isFull(ht.toInt(), rad, b)) {
+                                        println("Column $ht is full")
+                                        println("$nameTwo's turn:")
+                                        ht = readln()
+                                    } else valida = 1
+                                } else valida = 1
+                            }
+                            if (ht == "end") {
+                                break
+                            } else {
+                                kolca = ht.toInt()
+                                for (t in rad - 1 downTo 0) {
+                                    if (a[t][kolca * 2 - 1] == " ") {
+                                        a[t][kolca * 2 - 1] = a[t][kolca * 2 - 1].replace(" ", "*")
+                                        break
+                                    }
+                                }
+                                sPolem(rad, sl, a)
+                                b[kolca - 1] += 1
+                                if (forI(a, rad, sl)) {
+                                    println("Player $nameTwo won")
+                                    namT = namT + 2
+                                    println("Score\n$nameOne: $namO $nameTwo: $namT")
+                                } else if (isF(a)) {
+                                    println("It is a draw")
+                                    namO++
+                                    namT++
+                                    println("Score\n$nameOne: $namO $nameTwo: $namT")
+                                } else valida = 0
+                            }
+                        }
+                    }
+                    //if (ht != "end") ht = "" else ht = "end"
+                }
+            } else {
+                while (ht != "end" && !forI(a, rad, sl) && !isF(a)) {
+                    println("$nameTwo's turn:")
+                    ht = readln()
+
+                    while (valida == 0) {
+                        if (ht != "end") {
+                            if (!isNum(ht) && ht != "end") {
+                                println("Incorrect column number")
+                                println("$nameTwo's turn:")
+                                ht = readln()
+                            } else if (ht.toInt() !in 1..sl && ht != "end") {
+                                println("The column number is out of range (1 - $sl)")
+                                println("$nameTwo's turn:")
+                                ht = readln()
+                            } else if (ht != "end" && isFull(ht.toInt(), rad, b)) {
+                                println("Column $ht is full")
+                                println("$nameTwo's turn:")
+                                ht = readln()
+                            } else valida = 1
+                        } else valida = 1
+                    }
+                    if (ht == "end") {
+                        break
+                    } else {
+                        kolca = ht.toInt()
+                        for (t in rad - 1 downTo 0) {
+                            if (a[t][kolca * 2 - 1] == " ") {
+                                a[t][kolca * 2 - 1] = a[t][kolca * 2 - 1].replace(" ", "*")
+                                break
+                            }
+                        }
+                        sPolem(rad, sl, a)
+                        b[kolca - 1] = b[kolca - 1] + 1
+                        if (forI(a, rad, sl)) {
+                            println("Player $nameTwo won")
+                            namT += 2
+                            println("Score\n$nameOne: $namO $nameTwo: $namT")
+                        } else if (isF(a)) {
+                            println("It is a draw")
+                            namT++
+                            namO++
+                            println("Score\n$nameOne: $namO $nameTwo: $namT")
+                        } else {
+                            println("$nameOne's turn:")
+                            ht = readln()
+                            valida = 0
+                            while (valida == 0) {
+                                if (ht != "end") {
+                                    if (!isNum(ht) && ht != "end") {
+                                        println("Incorrect column number")
+                                        println("$nameOne's turn:")
+                                        ht = readln()
+                                    } else if (ht.toInt() !in 1..sl && ht != "end") {
+                                        println("The column number is out of range (1 - $sl)")
+                                        println("$nameOne's turn:")
+                                        ht = readln()
+                                    } else if (ht != "end" && isFull(ht.toInt(), rad, b)) {
+                                        println("Column $ht is full")
+                                        println("$nameOne's turn:")
+                                        ht = readln()
+                                    } else valida = 1
+                                } else valida = 1
+                            }
+                            if (ht == "end") {
+                                break
+                            } else {
+                                hvezdy = ht.toInt()
+                                for (t in rad - 1 downTo 0) {
+                                    if (a[t][hvezdy * 2 - 1] == " ") {
+                                        a[t][hvezdy * 2 - 1] = a[t][hvezdy * 2 - 1].replace(" ", "o")
+                                        break
+                                    }
+                                }
+                                sPolem(rad, sl, a)
+                                b[hvezdy - 1] += 1
+                                if (forI(a, rad, sl)) {
+                                    println("Player $nameOne won")
+                                    namO += 2
+                                    println("Score\n$nameOne: $namO $nameTwo: $namT")
+                                } else if (isF(a)) {
+                                    println("It is a draw")
+                                    namO++
+                                    namT++
+                                    println("Score\n$nameOne: $namO $nameTwo: $namT")
+                                } else valida = 0
+                            }
+                        }
+                    }
+                    //if (ht != "end") ht = "" else ht = "end"
+                }
+            }
+        }
+    }
+    println("Game over!")
+}
+
+
+fun isValid(a: String): Boolean {
+    return """^\s*\d+\s*[xX]{1}\s*\d+\s*$""".toRegex().matches(a) || a.isEmpty()
+}
+
+fun printBoard(rad: Int, sl: Int) {
+    for (a in 1..sl) { print(" $a") }
+    println()
+    for (i in 0..rad) {
+        for (y in 1..sl * 2 + 1) {
+            if (i < rad) {
+                if (y == 1 || y % 2 != 0) print('║') else print(" ")
+            } else {
+                if (y == 1) print('╚')
+                if (y == sl * 2) print('╝')
+                if (y % 2 == 0 && y < sl * 2) print('╩')
+                if (y % 2 != 0 && y < sl * 2 + 1) print('═')
+            }
+        }
+        if (i < rad + 1) println()
+    }
+}
+
+fun sPolem(rad: Int, sl: Int, x: MutableList<MutableList<String>>) {
+    for (c in 1..sl) { print(" $c") }
+    println()
+    for (p in x) {
+        print(p.joinToString(""))
+        println()
+    }
+}
+
+fun spoluM(rad: Int, sl: Int, x: MutableList<MutableList<String>>, y: Int = 1) {
+    println("Game #$y")
+    for (c in 1..sl) { print(" $c") }
+    println()
+    for (p in x) {
+        print(p.joinToString(""))
+        println()
+    }
+}
+
+fun doPol(rad: Int, sl: Int, nameO: String, nameT: String) {
+    println("$nameO VS $nameT")
+    println("$rad X $sl board")
+    for (c in 1..sl) { print(" $c") }
+    println()
+    val a: MutableList<MutableList<String>> = MutableList(rad + 1) { MutableList(sl * 2 + 2) { "" } }
+    for (i in 0..rad) {
+        for (y in 1..sl * 2 + 1) {
+            if (i < rad) {
+                if (y == 1 || y % 2 != 0) a[i][y] += "║" else a[i][y] += " "
+            } else {
+                if (y == 1) a[i][y] += "╚"
+                if (y == sl * 2) a[i][y] += "╝"
+                if (y % 2 == 0 && y < sl * 2) a[i][y] += "╩"
+                if (y % 2 != 0 && y < sl * 2 + 1) a[i][y] += "═"
+            }
+        }
+    }
+    for (p in a) {
+        print(p.joinToString(""))
+        println()
+    }
+}
+
+fun isNum(a: String): Boolean {
+    var count = 0
+    for (i in a) {
+        if (!i.isDigit()) count++
+    }
+    return count == 0
+}
+
+fun isnumOnePlus(a: String): Boolean {
+    var count = 0
+    for (i in a) {
+        if (!i.isDigit()) count++
+    }
+    if (count == 0) return a.toInt() >= 1 else return count == 0
+}
+
+fun isFull(s: Int, r: Int, x: List<Int>) = x[s - 1] == r
+
+fun isF(x: List<List<String>>): Boolean {
+    var a = 0
+    for (i in x) {
+        for (y in i) {
+            if (y == " ") {
+                a++
+                break
+            }
+        }
+        if (a > 0) break
+    }
+    return a == 0
+}
+
+fun forI(x: List<List<String>>, rad: Int, sl: Int): Boolean {
+    var a = 1
+    var d = rad - 1
+    var c = 0
+    for (i in 0..rad - 1) {
+        for (y in 1..sl * 2 - 3 step 2) {
+            if (x[i][y] != " " && x[i][y] == x[i][y + 2]) a++ else a = 1
+            if (a == 4) return a == 4
+        }
+        a = 1
+    }
+    a = 1
+    for (i in 1..sl * 2 - 1 step 2) {
+        for (y in rad - 1 downTo 1) {
+            if (x[y][i] != " " && x[y][i] == x[y - 1][i]) a++ else a = 1
+            if (a == 4) return a == 4
+        }
+        a = 1
+    }
+    a = 1
+    for (i in 1..sl * 2 - 7 step 2) {
+        for (y in i..sl * 2 - 3 step 2) {
+            if (x[d][y] != " " && x[d][y] == x[d - 1][y + 2]) a++ else a = 1
+            if (d > 0) d--
+            if (a == 4) return a == 4
+        }
+        d = rad - 1
+        a = 1
+    }
+    for (i in sl * 2 - 1 downTo 7 step 2) {
+        for (y in i downTo 3 step 2) {
+            if (x[d][y] != " " && x[d][y] == x[d - 1][y - 2]) a++ else a = 1
+            if (d > 0) d--
+            if (a == 4) return a == 4
+        }
+        d = rad - 1
+        a = 1
+    }
+    for (i in sl * 2 - 1 downTo 7 step 2) {
+        for (y in i downTo 3 step 2) {
+            if (x[c][y] != " " && x[c][y] == x[c + 1][y - 2]) a++ else a = 1
+            if (c < rad - 1) c++
+            if (a == 4) return a == 4
+        }
+        c = 0
+        a = 1
+    }
+    for (i in 3..sl * 2 - 7 step 2) {
+        for (y in i..sl * 2 - 3 step 2) {
+            if (x[c][y] != " " && x[c][y] == x[c + 1][y - 2]) a++ else a = 1
+            if (c < rad - 1) c++
+            if (a == 4) return a == 4
+        }
+        c = 0
+        a = 1
+    }
+    return a == 4
+}
+
+fun dopolSk(rad: Int, sl: Int, nameO: String, nameT: String, poc: Int = 1) {
+    println("$nameO VS $nameT")
+    println("$rad X $sl board")
+    if (poc == 1) println ("Single game") else println("Total $poc games\nGame #1")
+    for (c in 1..sl) { print(" $c") }
+    println()
+    val a: MutableList<MutableList<String>> = MutableList(rad + 1) { MutableList(sl * 2 + 2) { "" } }
+    for (i in 0..rad) {
+        for (y in 1..sl * 2 + 1) {
+            if (i < rad) {
+                if (y == 1 || y % 2 != 0) a[i][y] += "║" else a[i][y] += " "
+            } else {
+                if (y == 1) a[i][y] += "╚"
+                if (y == sl * 2) a[i][y] += "╝"
+                if (y % 2 == 0 && y < sl * 2) a[i][y] += "╩"
+                if (y % 2 != 0 && y < sl * 2 + 1) a[i][y] += "═"
+            }
+        }
+    }
+    for (p in a) {
+        print(p.joinToString(""))
+        println()
+    }
+}
